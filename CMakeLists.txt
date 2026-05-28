@@ -24,6 +24,11 @@ set(SOURCES
     src/dodgeHandler.cpp
     src/dodgeHandler.h
     src/utils.h
+    src/sprintInput.cpp
+    src/sprintInput.h
+    src/staminaHandler.h
+    src/staminaHandler.cpp
+    
 
 )
 

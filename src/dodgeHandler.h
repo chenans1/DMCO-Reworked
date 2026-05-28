@@ -2,6 +2,7 @@
 
 //class to handle dodge input. 
 namespace dodge {
+    void dodge();
     class dodgeInputHandler : public RE::BSTEventSink<RE::InputEvent*> {
     public:
         static dodgeInputHandler& GetSingleton() {
@@ -13,6 +14,8 @@ namespace dodge {
             RE::InputEvent* const* a_events,
             RE::BSTEventSource<RE::InputEvent*>* a_eventSource) override;
 
+        
+
     private: 
         dodgeInputHandler() = default;
         ~dodgeInputHandler() = default;
@@ -21,4 +24,5 @@ namespace dodge {
         dodgeInputHandler& operator=(const dodgeInputHandler&) = delete;
         dodgeInputHandler& operator=(dodgeInputHandler&&) = delete;
     };
+
 }

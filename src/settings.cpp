@@ -20,16 +20,6 @@ namespace settings {
     static std::atomic_bool g_captureDodgeBind{false};
     static std::atomic_bool g_waitingRelease{false};
 
-    static void startCapture() {
-        g_captureDodgeBind.store(true, std::memory_order_release);
-        g_waitingRelease.store(true, std::memory_order_release);
-    }
-
-    static void stopCapture() {
-        g_captureDodgeBind.store(false, std::memory_order_release);
-        g_waitingRelease.store(false, std::memory_order_release);
-    }
-
     static config cfg{};
     config& Get() { return cfg; }
 
@@ -47,6 +37,11 @@ namespace settings {
         auto& c = Get();
         c.dodgeBind = static_cast<int>(ini.GetLongValue("general", "dodgeBind", c.dodgeBind));
         c.staminaCost = ini_float(ini, "general", "staminaCost", c.staminaCost);
+        c.percentCost = ini_bool(ini, "General", "usePercentCost", c.percentCost);
+        //c.secondDodgeMult = ini_float(ini, "general", "secondDodgeMult", c.secondDodgeMult);
+        c.useSprint = ini_bool(ini, "General", "useSprintKey", c.useSprint);
+        c.sprintDelay = ini_float(ini, "general", "sprintHoldDuration", c.sprintDelay);
+
         log::info("Settings Loaded: dodgeBind={}, staminaCost={}", 
             c.dodgeBind, c.staminaCost);
     }
@@ -62,6 +57,11 @@ namespace settings {
 
         ini.SetLongValue("general", "dodgeBind", c.dodgeBind);
         ini.SetDoubleValue("general", "staminaCost", static_cast<double>(c.staminaCost), "%.3f");
+        ini.SetLongValue("general", "usePercentCost", c.percentCost);
+        //ini.SetDoubleValue("general", "secondDodgeMult", static_cast<double>(c.secondDodgeMult), "%.3f");
+        ini.SetLongValue("general", "useSprintKey", c.useSprint);
+        ini.SetDoubleValue("general", "sprintHoldDuration", static_cast<double>(c.sprintDelay), "%.3f");
+
 
         const SI_Error rc = ini.SaveFile(path);
         if (rc < 0) {
@@ -150,7 +150,16 @@ namespace settings {
             }
         
         }
+
         unsaved |= ImGuiMCP::DragFloat("Dodge Stamina Cost Requirement", &c.staminaCost, 1.0f, 0.0f, 100.0f, "%.2f");
+        unsaved |= ImGuiMCP::Checkbox("Use Percent Cost", &c.percentCost);
+
+        //test: sprint input button
+        unsaved |= ImGuiMCP::Checkbox("Use Sprint Key", &c.useSprint);
+        ImGuiMCP::TextUnformatted("Dodge is triggered on sprint key release. Holding the key for longer than duration below sprints instead.");
+        unsaved |= ImGuiMCP::DragFloat("Hold Duration for sprint", &c.sprintDelay, 0.01f, 0.01f, 1.0f, "%.2f");
+
+        
 
         if (ImGuiMCP::Button("Save")) {
             save();
