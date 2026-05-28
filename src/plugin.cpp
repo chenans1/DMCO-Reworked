@@ -6,6 +6,7 @@
 
 #include "settings.h"
 #include "dodgeHandler.h"
+#include "staminaHandler.h"
 
 using namespace SKSE;
 using namespace SKSE::log;
@@ -69,6 +70,7 @@ SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     settings::RegisterMenu();
     settings::load();
     SKSE::GetMessagingInterface()->RegisterListener(MessageHandler);
+    stamina::processEventHook::Install();
     log::info("{} has finished loading.", plugin->GetName());
     return true;
 }
