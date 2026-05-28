@@ -17,10 +17,14 @@ static bool isUIClosed() {
 static bool areControlsEnabled() {
     const auto controlMap = RE::ControlMap::GetSingleton();
     const auto playerControls = RE::PlayerControls::GetSingleton();
-    if (controlMap->IsFightingControlsEnabled() && playerControls->attackBlockHandler->inputEventHandlingEnabled) {
+    /*if (controlMap->IsFightingControlsEnabled() && playerControls->attackBlockHandler->inputEventHandlingEnabled) {
         return true;
     }
-    return false;
+    return false;*/
+    if (!controlMap->IsMovementControlsEnabled() || !controlMap->IsLookingControlsEnabled()) {
+        return false;
+    }
+    return true;
 }
 namespace dodge {
     enum Direction : std::uint32_t {
