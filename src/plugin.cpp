@@ -5,6 +5,7 @@
 #include <spdlog/sinks/msvc_sink.h>
 
 #include "settings.h"
+#include "dodgeHandler.h"
 
 using namespace SKSE;
 using namespace SKSE::log;
@@ -49,8 +50,8 @@ static void MessageHandler(SKSE::MessagingInterface::Message* msg) {
                 log::warn("BSInputDeviceManager Not Available");
                 return;
             }
-            //inputMgr->AddEventSink();
-            
+            inputMgr->AddEventSink(&dodge::dodgeInputHandler::GetSingleton());
+            log::info("dodgeInputHandlerRegistered");
             break;
         }
         default:

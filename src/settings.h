@@ -8,7 +8,8 @@ namespace settings {
     };
 
     config& Get();
-
+    inline int dodgeBind() { return Get().dodgeBind; }
+    inline float staminaCost() { return Get().staminaCost; }
     void RegisterMenu();
     void __stdcall RenderMenuPage();
 
