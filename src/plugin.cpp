@@ -4,6 +4,8 @@
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/sinks/msvc_sink.h>
 
+#include "settings.h"
+
 using namespace SKSE;
 using namespace SKSE::log;
 using namespace SKSE::stl;
@@ -36,13 +38,35 @@ namespace {
         spdlog::set_default_logger(std::move(loggerPtr));
     }
 }
+static void MessageHandler(SKSE::MessagingInterface::Message* msg) {
+    if (!msg) {
+        return;
+    }
+    switch (msg->type) {
+        case SKSE::MessagingInterface::kDataLoaded: {
+            auto* inputMgr = RE::BSInputDeviceManager::GetSingleton();
+            if (!inputMgr) {
+                log::warn("BSInputDeviceManager Not Available");
+                return;
+            }
+            //inputMgr->AddEventSink();
+            
+            break;
+        }
+        default:
+            break;
+    }
+}
+
 SKSEPluginLoad(const SKSE::LoadInterface* skse) {
     initialize_log();
     auto* plugin = PluginDeclaration::GetSingleton();
     auto version = plugin->GetVersion();
     log::info("{} {} is loading...", plugin->GetName(), version);
     SKSE::Init(skse);
-
+    settings::RegisterMenu();
+    settings::load();
+    SKSE::GetMessagingInterface()->RegisterListener(MessageHandler);
     log::info("{} has finished loading.", plugin->GetName());
     return true;
 }

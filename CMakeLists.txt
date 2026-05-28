@@ -7,7 +7,7 @@ set(BUILD_TESTS OFF CACHE BOOL "Build unit tests for CommonLibVR." FORCE)
 set(ENABLE_SKYRIM_VR OFF CACHE BOOL "" FORCE)
 
 # Set your project name. This will be the name of your SKSE .dll file.
-project(DodgeFramework VERSION 0.0.1 LANGUAGES CXX)
+project(DMCO VERSION 0.0.1 LANGUAGES CXX)
 
 set(OUTPUT_FOLDER "${CMAKE_CURRENT_SOURCE_DIR}/output")
 
@@ -21,6 +21,8 @@ set(SOURCES
     src/plugin.cpp
     src/settings.h
     src/settings.cpp
+    src/dodgeHandler.cpp
+    src/dodgeHandler.h
 
 )
 

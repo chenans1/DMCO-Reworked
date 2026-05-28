@@ -16,12 +16,19 @@ static float ini_float(CSimpleIniA& ini, const char* section, const char* key, f
 }
 
 namespace settings {
-    //capture keybind
-    /*inline std::atomic_bool g_captureBind{false};
+    //use atomics since IIRC the UI elements are usually not ran on main thread unlike rest of game logic
+    static std::atomic_bool g_captureDodgeBind{false};
+    static std::atomic_bool g_waitingRelease{false};
 
-    enum class CaptureTarget : std::uint8_t { None = 0, dodgeBind };
-    inline std::atomic<CaptureTarget> g_captureTarget{CaptureTarget::None};
-    inline std::atomic_bool g_waitingRelease{false};*/
+    static void startCapture() {
+        g_captureDodgeBind.store(true, std::memory_order_release);
+        g_waitingRelease.store(true, std::memory_order_release);
+    }
+
+    static void stopCapture() {
+        g_captureDodgeBind.store(false, std::memory_order_release);
+        g_waitingRelease.store(false, std::memory_order_release);
+    }
 
     static config cfg{};
     config& Get() { return cfg; }
@@ -55,5 +62,138 @@ namespace settings {
 
         ini.SetLongValue("general", "dodgeBind", c.dodgeBind);
         ini.SetDoubleValue("general", "staminaCost", static_cast<double>(c.staminaCost), "%.3f");
+
+        const SI_Error rc = ini.SaveFile(path);
+        if (rc < 0) {
+            log::error("Failed to save ini '{}'. SI_Error={}", path, static_cast<int>(rc));
+            return;
+        }
+
+        log::info("Saved ini '{}'", path);
+    }
+
+
+    //skse menu framework input
+    bool __stdcall OnInput(RE::InputEvent* event) {
+        if (!g_captureDodgeBind.load(std::memory_order_acquire)) {
+            return false;  
+        }
+
+        if (!event) {
+            return true;
+        }
+        auto* btn = event->AsButtonEvent();
+        if (!btn) {
+            return true;
+        }
+
+        auto& c = Get();
+        
+        if (g_waitingRelease.load(std::memory_order_acquire)) {
+            if (!btn->IsDown()) {
+                g_waitingRelease.store(false, std::memory_order_release);
+            }
+            return true;
+        }
+
+        if (btn->IsDown()) {
+            return true;
+        }
+
+        // ESC = unbind and exit
+        if (btn->device.get() == RE::INPUT_DEVICE::kKeyboard) {
+            if (btn->GetIDCode() == 0x01) {
+                c.dodgeBind = -1;
+                g_captureDodgeBind.store(false, std::memory_order_release);
+                g_waitingRelease.store(false, std::memory_order_release);
+                return true;
+            }
+        }
+
+        const int key = toKeyCode(*btn);
+
+        if (key != 0) {
+            c.dodgeBind = key;
+            g_captureDodgeBind.store(false, std::memory_order_release);
+            g_waitingRelease.store(false, std::memory_order_release);
+        }
+
+        return true;
+    }
+
+    void __stdcall RenderMenuPage() {
+        auto& c = Get();
+        static bool unsaved = false;
+
+        const bool capturing = g_captureDodgeBind.load(std::memory_order_acquire);
+        ImGuiMCP::Text("Dodge Keybind: %d", c.dodgeBind);
+        if (capturing) {
+            ImGuiMCP::SameLine();
+            ImGuiMCP::TextUnformatted("Press a key... (ESC = unbind which disables)");
+
+            if (ImGuiMCP::Button("Cancel")) {
+                g_captureDodgeBind.store(false, std::memory_order_release);
+                g_waitingRelease.store(false, std::memory_order_release);
+            }
+        } else {
+
+            if (ImGuiMCP::Button("Rebind Dodge")) {
+                g_captureDodgeBind.store(true, std::memory_order_release);
+                g_waitingRelease.store(true, std::memory_order_release);
+            }
+
+            ImGuiMCP::SameLine();
+
+            if (ImGuiMCP::Button("Clear Dodge Bind")) {
+                c.dodgeBind = -1;
+                unsaved = true;
+            }
+        
+        }
+        unsaved |= ImGuiMCP::DragFloat("Dodge Stamina Cost Requirement", &c.staminaCost, 1.0f, 0.0f, 100.0f, "%.2f");
+
+        if (ImGuiMCP::Button("Save")) {
+            save();
+            unsaved = false;
+        }
+        ImGuiMCP::SameLine();
+        if (ImGuiMCP::Button("Revert")) {
+            load();
+            unsaved = false;
+        }
+
+        if (unsaved) {
+            ImGuiMCP::TextUnformatted("Unsaved changes");
+        }
+    }
+
+    void RegisterMenu() {
+        if (!SKSEMenuFramework::IsInstalled()) {
+            SKSE::log::warn("SKSE Menu Framework not installed; skipping menu registration.");
+            return;
+        }
+        log::info("RegisterMenu Installed()");
+        SKSEMenuFramework::SetSection("DMCO");
+        SKSEMenuFramework::AddSectionItem("Settings", RenderMenuPage);
+        SKSEMenuFramework::AddInputEvent(OnInput);
+    }
+
+    int toKeyCode(const RE::ButtonEvent& event) {
+        const auto device = event.device.get();
+        const auto id = event.GetIDCode();
+
+        switch (device) {
+            case RE::INPUT_DEVICE::kKeyboard:
+                return static_cast<int>(id);
+
+            case RE::INPUT_DEVICE::kMouse:
+                return static_cast<int>(id + SKSE::InputMap::kMacro_MouseButtonOffset);
+
+            case RE::INPUT_DEVICE::kGamepad:
+                return static_cast<int>(SKSE::InputMap::GamepadMaskToKeycode(id));
+
+            default:
+                return 0;
+        }
     }
 }
