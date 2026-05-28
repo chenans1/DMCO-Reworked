@@ -39,6 +39,7 @@ namespace {
         spdlog::set_default_logger(std::move(loggerPtr));
     }
 }
+
 static void MessageHandler(SKSE::MessagingInterface::Message* msg) {
     if (!msg) {
         return;

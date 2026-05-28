@@ -64,11 +64,9 @@ namespace dodge {
 
         for (auto ev = *a_events; ev != nullptr; ev = ev->next) {
             auto* btn = ev->AsButtonEvent();
-            if (!btn) continue;
+            if (!btn || !btn->IsDown()) continue;
             const int input = settings::toKeyCode(*btn);
-
-            if (input != dodgeBind) continue;
-
+            
             if (input == dodgeBind) {
                 //first check if we have enough stasmina to dodge
                 //not bothering with handling dodge stamina consumption here, you'd need to check if the animation fired off
@@ -78,7 +76,7 @@ namespace dodge {
                 if (requiredStamina > stamina) {
                     SKSE::log::info("not enough stamina");
                     RE::HUDMenu::FlashMeter(RE::ActorValue::kStamina);
-                    return RE::BSEventNotifyControl::kContinue;
+                    return RE::BSEventNotifyControl::kStop;
                 }
                 //normalize input vector stuff
                 auto normalizedInputDirection = Vec2Normalize(playerControls->data.prevMoveVec);
@@ -88,7 +86,7 @@ namespace dodge {
                     player->NotifyAnimationGraph("Dodge_N");
                     player->NotifyAnimationGraph("Dodge");
                     SKSE::log::info("neutral");
-                    return RE::BSEventNotifyControl::kContinue;
+                    return RE::BSEventNotifyControl::kStop;
                 }
 
                 RE::NiPoint2 forwardVector(0.f, 1.f);
@@ -143,8 +141,10 @@ namespace dodge {
                     player->NotifyAnimationGraph("Dodge");
                     SKSE::log::info("left-forward");
                 }
-                break;
+                return RE::BSEventNotifyControl::kStop;
             }
+
+            if (input != dodgeBind) continue;
             
         }
         return RE::BSEventNotifyControl::kContinue;
