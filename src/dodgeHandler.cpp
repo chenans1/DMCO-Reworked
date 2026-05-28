@@ -55,9 +55,10 @@ namespace dodge {
         }
 
         auto stamina = player->AsActorValueOwner()->GetActorValue(RE::ActorValue::kStamina);
+        
         if (settings::percentageCost()) {
-            const auto max = player->GetBaseActorValue(RE::ActorValue::kStamina);
-            const auto requiredStamina = (settings::staminaCost() / 100) * max;
+            auto max = player->AsActorValueOwner()->GetBaseActorValue(RE::ActorValue::kStamina);
+            auto requiredStamina = (settings::staminaCost() / 100) * max;
             if (requiredStamina > stamina) {
                 SKSE::log::info("not enough stamina");
                 RE::HUDMenu::FlashMeter(RE::ActorValue::kStamina);
