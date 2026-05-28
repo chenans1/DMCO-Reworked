@@ -23,8 +23,15 @@ namespace stamina {
                 RE::ActorValueOwner* actorAV = actor->AsActorValueOwner();
                 if (!actorAV) {
                     log::warn("No actor value"); return;
+                    actorAV->DamageActorValue(RE::ActorValue::kStamina, settings::staminaCost());
                 }
-                actorAV->DamageActorValue(RE::ActorValue::kStamina, settings::staminaCost());
+                if (settings::percentageCost) {
+                    const auto max = actor->GetBaseActorValue(RE::ActorValue::kStamina);
+                    const auto cost = (settings::staminaCost() / 100) * max;
+                    actorAV->DamageActorValue(RE::ActorValue::kStamina, cost);
+                } else {
+                    actorAV->DamageActorValue(RE::ActorValue::kStamina, settings::staminaCost());
+                }
                 log::info("Damaged Stamina");
             }
         }

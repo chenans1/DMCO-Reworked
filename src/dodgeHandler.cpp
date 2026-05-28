@@ -53,13 +53,31 @@ namespace dodge {
         if (!playerControls) {
             return;
         }
-        auto requiredStamina = settings::staminaCost();
+
         auto stamina = player->AsActorValueOwner()->GetActorValue(RE::ActorValue::kStamina);
-        if (requiredStamina > stamina) {
+        if (settings::percentageCost()) {
+            const auto max = player->GetBaseActorValue(RE::ActorValue::kStamina);
+            const auto requiredStamina = (settings::staminaCost() / 100) * max;
+            if (requiredStamina > stamina) {
+                SKSE::log::info("not enough stamina");
+                RE::HUDMenu::FlashMeter(RE::ActorValue::kStamina);
+                return;
+            }
+        } else {
+            const auto requiredStamina = settings::staminaCost();
+            if (requiredStamina > stamina) {
+                SKSE::log::info("not enough stamina");
+                RE::HUDMenu::FlashMeter(RE::ActorValue::kStamina);
+                return;
+            }
+            
+        }
+        
+        /*if (requiredStamina > stamina) {
             SKSE::log::info("not enough stamina");
             RE::HUDMenu::FlashMeter(RE::ActorValue::kStamina);
             return;
-        }
+        }*/
         // normalize input vector stuff
         auto normalizedInputDirection = Vec2Normalize(playerControls->data.prevMoveVec);
         if (normalizedInputDirection.x == 0.f && normalizedInputDirection.y == 0.f) {
