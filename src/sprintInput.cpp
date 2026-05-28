@@ -46,22 +46,50 @@ namespace sprint {
 
         const auto userEvent = a_event->QUserEvent();
 
-        if (userEvent == userEvents->sprint) {
-            if (a_event->IsDown() && player->playerFlags.isSprinting) {
-                bStoppingSprint = true;
-            } else if (a_event->HeldDuration() < settings::sprintDelay()) {
-                if (a_event->IsUp()) {
+        /*if (userEvent != userEvents->sprint) {
+            return _ProcessButton(a_this, a_event, a_data);
+        }*/
+
+        //change sprintstop to keyrelease instead of down
+        if (a_event->IsDown()) {
+            //never let the game bother process this
+            return;
+        }
+
+        // here we handle both stop sprint and dodgestart
+        else if (a_event->IsUp()) {
+            // if we are sprinting, we stop sprint on the keyrelease.
+            if (player->IsSprinting()) {
+                player->playerFlags.isSprinting = false;
+                // player->NotifyAnimationGraph("StopSprint"sv);
+            } else {
+                // if we are NOT sprinting, and released fast enough, we must dodge.
+                if (a_event->heldDownSecs <= settings::sprintDelay()) {
+                    player->playerFlags.isSprinting == false;
                     dodge::dodge();
-                    bStoppingSprint = false;
+                    return;
                 }
-                return;
-            } else if (!player->playerFlags.isSprinting && !bStoppingSprint) {
-                a_event->heldDownSecs = 0.0f;
-            } else if (a_event->IsUp()) {
-                bStoppingSprint = false;
             }
         }
 
+        //start sprint if held long enough
+        else if (a_event->IsPressed()) {
+            //if not sprinting: we sprint
+            if (!player->IsSprinting()) {
+                if (a_event->heldDownSecs > settings::sprintDelay()) {
+                    auto stamina = player->AsActorValueOwner()->GetActorValue(RE::ActorValue::kStamina);
+                    if (stamina > 0.0f) {
+                        player->playerFlags.isSprinting = true;
+                        //player->NotifyAnimationGraph("SprintStart"sv);
+                    } else {
+                        RE::HUDMenu::FlashMeter(RE::ActorValue::kStamina);
+                    }
+                }
+                return _ProcessButton(a_this, a_event, a_data);
+            }
+        }
+        
+        
         _ProcessButton(a_this, a_event, a_data);
     }
     
