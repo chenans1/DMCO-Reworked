@@ -23,6 +23,7 @@ set(SOURCES
     src/settings.cpp
     src/dodgeHandler.cpp
     src/dodgeHandler.h
+    src/utils.h
 
 )
 
