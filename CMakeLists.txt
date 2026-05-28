@@ -19,6 +19,9 @@ include(extern/CommonLibVR-ng/cmake/CommonLibSSE.cmake)
 
 set(SOURCES
     src/plugin.cpp
+    src/settings.h
+    src/settings.cpp
+
 )
 
 add_commonlibsse_plugin(${PROJECT_NAME} SOURCES ${SOURCES}) # <--- specifies plugin.cpp
@@ -29,7 +32,7 @@ target_precompile_headers(${PROJECT_NAME} PRIVATE
 ) 
 
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/extern/SimpleIni.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/extern
 )
 
 # When your SKSE .dll is compiled, this will automatically copy the .dll into your mods folder.
