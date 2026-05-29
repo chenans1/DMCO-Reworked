@@ -28,9 +28,10 @@ namespace sprint {
             return false;
         }
 
-        bool isSprinting = false;
+        /*bool isSprinting = false;
         player->GetGraphVariableBool("IsSprinting", isSprinting);
-        return isSprinting;
+        return isSprinting;*/
+        return player->IsSprinting();
     }
 
     void SprintHandlerHook::ProcessButton(
@@ -44,7 +45,7 @@ namespace sprint {
             return _ProcessButton(a_this, a_event, a_data);
         }
 
-        auto* player = RE::PlayerCharacter::GetSingleton();
+        auto player = RE::PlayerCharacter::GetSingleton();
         if (!player) {
             return _ProcessButton(a_this, a_event, a_data);
         }
@@ -54,13 +55,14 @@ namespace sprint {
             return _ProcessButton(a_this, a_event, a_data);
         }
 
-        /*const auto userEvent = a_event->QUserEvent();
+        const auto userEvent = a_event->QUserEvent();
 
-        if (userEvent == userEvents->sprint) {
+        /*if (userEvent != userEvents->sprint) {
             return _ProcessButton(a_this, a_event, a_data);
         }*/
 
-        const bool isSprinting = IsPlayerSprinting(player);
+        /*const bool isSprinting = IsPlayerSprinting(player);*/
+        const bool isSprinting = player->GetPlayerRuntimeData().playerFlags.isSprinting;
         if (a_event->IsDown() && isSprinting) {
             bStoppingSprint = true;
         } else if (a_event->HeldDuration() < settings::sprintDelay()) {
@@ -71,6 +73,7 @@ namespace sprint {
             return;
         } else if (!isSprinting && !bStoppingSprint) {
             a_event->heldDownSecs = 0.0f;
+            //a_event->value = 0.0f;
         } else if (a_event->IsUp()) {
             bStoppingSprint = false;
         }
